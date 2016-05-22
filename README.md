@@ -12,10 +12,13 @@ Para añadir un repositorio remoto dentro de TrueSTUDIO, sigue los pasos:
      
      ![Alt text](/Images/GitPanel.PNG?raw=true "Git Repositories Panel") 
 
+
 #### 2. Clona el repositorio remoto 
-    Mediante: `Clone a Git Repository`
-    Deberás introducir la URI del repositorio (Los dos campos siguientes se rellenan autmáticamente), y tus credenciales de GitHub.
-    La URI la obtienes pinchando sobre **Clone or Download** dentro de la página del repositorio (en la web de github**, no obstante para nusetro caso será la siguiente: `https://github.com/domitilo/Template.git`
+       
+      Mediante: `Clone a Git Repository`
+      
+      Deberás introducir la URI del repositorio (Los dos campos siguientes se rellenan autmáticamente), y tus credenciales de GitHub.
+      La URI la obtienes pinchando sobre **Clone or Download** dentro de la página del repositorio (en la web de github**, no obstante para nusetro caso será la siguiente: `https://github.com/domitilo/Template.git`
 
    ![Alt text](/Images/CloneRepository.PNG?raw=true "Clone Repository") 
    
