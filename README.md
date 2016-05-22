@@ -8,9 +8,10 @@
 Para añadir un repositorio remoto dentro de TrueSTUDIO, sigue los pasos:
 
 #### 1. Muestra el panel *Git Repositories*####
-    Para ello ve a: `View>Other>Git>Git Repositories`
+
+      Para ello ve a: `View>Other>Git>Git Repositories`
   
-    ![Alt text](/Images/GitPanel.PNG?raw=true "Git Repositories Panel") 
+      ![Alt text](/Images/GitPanel.PNG?raw=true "Git Repositories Panel") 
 
 #### 2. Clona el repositorio remoto####
     Mediante: `Clone a Git Repository`
