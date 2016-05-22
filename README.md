@@ -7,12 +7,12 @@
 ## TrueSTUDIO y GitHub
 Para añadir un repositorio remoto dentro de TrueSTUDIO, sigue los pasos:
 
-#### 1. Muestra el panel *Git Repositories* #### 
-    Para ello ve a: `View>Other>Git>Git Repositories` 
-    
-    ![Alt text](/Images/GitPanel.PNG?raw=true "Git Repositories Panel") 
+#### 1. Muestra el panel *Git Repositories* 
+     Para ello ve a: `View>Other>Git>Git Repositories` 
+     
+     ![Alt text](/Images/GitPanel.PNG?raw=true "Git Repositories Panel") 
 
-#### 2. Clona el repositorio remoto####
+#### 2. Clona el repositorio remoto 
     Mediante: `Clone a Git Repository`
     Deberás introducir la URI del repositorio (Los dos campos siguientes se rellenan autmáticamente), y tus credenciales de GitHub.
     La URI la obtienes pinchando sobre **Clone or Download** dentro de la página del repositorio (en la web de github**, no obstante para nusetro caso será la siguiente: `https://github.com/domitilo/Template.git`
@@ -27,11 +27,11 @@ Para añadir un repositorio remoto dentro de TrueSTUDIO, sigue los pasos:
    
    ![Alt text](/Images/RepositoriesView.PNG?raw=true "Git Repositories Panel") 
 
-#### 3. Descargar el contenido online.####
+#### 3. Descargar el contenido online.
     Útil si alguien modifica tu rama, y tienes que descargarla para empezar a trabajar sobre esta modificación. Si no, habitualmente sólo tendrás que subir tus modificaciones como se muestra después.
    Para ello, pulsamos con el botón derecho en el nombre del repositorio, y le damos a *Pull*.
 
-#### 4. Cargar el contenido creado/modificado####
+#### 4. Cargar el contenido creado/modificado
 
    Cuando hayas modificado el contenido y quieras cargarlo a la web, sigue estos pasos.
    
