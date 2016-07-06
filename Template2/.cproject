@@ -37,8 +37,9 @@
 									<listOptionValue builtIn="false" value="../src"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Libraries/STM32F4xx_HAL_Driver/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="..\Libraries\CMSIS\Include"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Libraries/Device/STM32F4xx/Include\}&quot;"/>
+									<listOptionValue builtIn="false" value="..\Libraries\CMSIS\Include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Libraries/BSP/STM32F4-Discovery}&quot;"/>
 								</option>
 								<option id="com.atollic.truestudio.common_options.target.endianess.812777826" name="Endianess" superClass="com.atollic.truestudio.common_options.target.endianess"/>
 								<option id="com.atollic.truestudio.common_options.target.mcpu.895291933" name="Microcontroller" superClass="com.atollic.truestudio.common_options.target.mcpu" value="STM32F407VG" valueType="enumerated"/>
@@ -218,9 +219,12 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="Template2.com.atollic.truestudio.exe.1504508714" name="Executable" projectType="com.atollic.truestudio.exe"/>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="com.atollic.truestudio.exe.debug.749837376;com.atollic.truestudio.exe.debug.749837376.;com.atollic.truestudio.exe.debug.toolchain.gcc.994982264;com.atollic.truestudio.gcc.input.255356712">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.atollic.truestudio.mbs.ARMToolsPerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+	</storageModule>
 </cproject>

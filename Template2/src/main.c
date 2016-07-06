@@ -1,42 +1,20 @@
-/**
-  ******************************************************************************
-  * @file    Templates/Src/main.c 
-  * @author  MCD Application Team
+/**  ******************************************************************************
+  * @file    Src/main.c
+  *
+  * @author  Adrian Domenech
   * @version V1.2.3
-  * @date    29-January-2016
-  * @brief   Main program body
-  ******************************************************************************
-  *//*@attention
+  * @date    12-Junio-2013
+  * @brief   Parpadeo de LED en función de la lectura de acelerómetro MEMS
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
-  *
-  * Redistribution and use in source and binary forms, with or without modification,
-  * are permitted provided that the following conditions are met:
-  *   1. Redistributions of source code must retain the above copyright notice,
-  *      this list of conditions and the following disclaimer.
-  *   2. Redistributions in binary form must reproduce the above copyright notice,
-  *      this list of conditions and the following disclaimer in the documentation
-  *      and/or other materials provided with the distribution.
-  *   3. Neither the name of STMicroelectronics nor the names of its contributors
-  *      may be used to endorse or promote products derived from this software
-  *      without specific prior written permission.
-  *
-  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * Sin HAL
   *
   ******************************************************************************
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+	#include "main.h"
+	#include "stm32f4_discovery.h"
+	#include "stm32f4_discovery_accelerometer.h"
 
 /** @addtogroup STM32F4xx_HAL_Examples
   * @{
@@ -49,12 +27,37 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
+	#define ABS(x)         (x < 0) ? (-x) : x
+	#define MAX_AB(a,b)    (a < b) ? (b) : a
 /* Private variables ---------------------------------------------------------*/
+
+	/* Variables used for timer */
+	uint16_t PrescalerValue = 0;
+	TIM_HandleTypeDef htim4;
+	TIM_OC_InitTypeDef sConfigTim4;
+
+	/* Variables used during Systick ISR*/
+	uint8_t Counter  = 0x00;
+	__IO uint16_t MaxAcceleration = 0;
+
+	/* Variables used for accelerometer */
+	__IO int16_t X_Offset, Y_Offset;
+	int16_t Buffer[3];
+
+	/* MEMS thresholds {Low/High} */
+	static int16_t ThreadholdAcceleroLow = -110, ThreadholdAcceleroHigh = 110;
+
+	/* TIM4 Autoreload and Capture Compare register values */
+	#define TIM_ARR        (uint16_t)1999
+	#define TIM_CCR        (uint16_t)1000
+
 /* Private function prototypes -----------------------------------------------*/
-static void SystemClock_Config(void);
-static void Error_Handler(void);
+	static void SystemClock_Config(void);
+	static void Error_Handler(void);
+	static void TIM4_Config(void);
 
 /* Private functions ---------------------------------------------------------*/
+
 /**
   * @brief  Main program
   * @param  None
@@ -77,15 +80,191 @@ int main(void)
   /* Configure the system clock to 168 MHz */
   SystemClock_Config();
 
+  /*Initialize board's components */
+  if(BSP_ACCELERO_Init() != HAL_OK)
+  {
+	/* Initialization Error */
+	Error_Handler();
+  }
 
-  /* Add your application code here
-     */
+  BSP_LED_Init(LED3);
+
+  /* SysTick end of count event each 10ms */
+ SystemCoreClock = HAL_RCC_GetHCLKFreq();
+ SysTick_Config(SystemCoreClock / 100);
+
+ BSP_LED_On(LED3);
+ TIM4_Config();
+
 
 
   /* Infinite loop */
   while (1)
   {
   }
+}
+
+
+/**
+  * @brief  Configures the TIM Peripheral.
+  * @param  None
+  * @retval None
+  */
+static void TIM4_Config()
+{
+  /* -----------------------------------------------------------------------
+  TIM4 Configuration: Output Compare Timing Mode:
+
+  In this example TIM4 input clock (TIM4CLK) is set to 2 * APB1 clock (PCLK1),
+  since APB1 prescaler is different from 1 (APB1 Prescaler = 4, see system_stm32f4xx.c file).
+  TIM4CLK = 2 * PCLK1
+  PCLK1 = HCLK / 4
+  => TIM4CLK = 2*(HCLK / 4) = HCLK/2 = SystemCoreClock/2
+
+  To get TIM4 counter clock at 2 KHz, the prescaler is computed as follows:
+  Prescaler = (TIM4CLK / TIM4 counter clock) - 1
+  Prescaler = (84 MHz/(2 * 2 KHz)) - 1 = 41999
+
+  To get TIM4 output clock at 1 Hz, the period (ARR)) is computed as follows:
+  ARR = (TIM4 counter clock / TIM4 output clock) - 1
+  = 1999
+
+  TIM4 Channel1 duty cycle = (TIM4_CCR1/ TIM4_ARR)* 100 = 50%
+  TIM4 Channel2 duty cycle = (TIM4_CCR2/ TIM4_ARR)* 100 = 50%
+  TIM4 Channel3 duty cycle = (TIM4_CCR3/ TIM4_ARR)* 100 = 50%
+  TIM4 Channel4 duty cycle = (TIM4_CCR4/ TIM4_ARR)* 100 = 50%
+
+  ==> TIM4_CCRx = TIM4_ARR/2 = 1000  (where x = 1, 2, 3 and 4).
+  ----------------------------------------------------------------------- */
+
+  /* Compute the prescaler value */
+  PrescalerValue = (uint16_t) ((SystemCoreClock /2) / 2000) - 1;
+
+  /* Time base configuration */
+  htim4.Instance             = TIM4;
+  htim4.Init.Period          = TIM_ARR;
+  htim4.Init.Prescaler       = PrescalerValue;
+  htim4.Init.ClockDivision   = 0;
+  htim4.Init.CounterMode     = TIM_COUNTERMODE_UP;
+  if(HAL_TIM_PWM_Init(&htim4) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
+  }
+
+  /* TIM PWM1 Mode configuration: Channel */
+  /* Output Compare Timing Mode configuration: Channel1 */
+  sConfigTim4.OCMode = TIM_OCMODE_PWM1;
+  sConfigTim4.OCIdleState = TIM_CCx_ENABLE;
+  sConfigTim4.Pulse = TIM_CCR;
+  sConfigTim4.OCPolarity = TIM_OCPOLARITY_HIGH;
+
+  /* Output Compare PWM1 Mode configuration: Channel1 */
+  if(HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigTim4, TIM_CHANNEL_1) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
+  }
+
+  /* Output Compare PWM1 Mode configuration: Channel2 */
+  if(HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigTim4, TIM_CHANNEL_2) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
+  }
+
+  /* Output Compare PWM1 Mode configuration: Channel3 */
+  if(HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigTim4, TIM_CHANNEL_3) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
+  }
+  /* Output Compare PWM1 Mode configuration: Channel4 */
+  if(HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigTim4, TIM_CHANNEL_4) != HAL_OK)
+  {
+    /* Initialization Error */
+    Error_Handler();
+  }
+}
+
+
+/**
+  * @brief  SYSTICK callback.
+  * @param  None
+  * @retval None
+  */
+void HAL_SYSTICK_Callback(void)
+{
+
+
+
+  X_Offset, Y_Offset=0x00;
+  uint16_t Temp_X, Temp_Y = 0x00;
+  uint16_t NewARR_X, NewARR_Y = 0x00;
+
+      /* Reset Buffer used to get accelerometer values */
+
+      Buffer[0] = 0;
+      Buffer[1] = 0;
+
+      /* Disable All TIM4 Capture Compare Channels */
+
+    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
+      HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3); //LED3 Output
+    HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_4);
+
+      /* Read Acceleration*/
+      BSP_ACCELERO_GetXYZ(Buffer);
+
+      /*TODO:
+       * · Eliminate #_Offset, from axe not used
+       * · Eliminate MaxAceleration Temp_# of unused variable
+       */
+
+      /* Set X and Y positions */
+      X_Offset = Buffer[0];
+      Y_Offset = Buffer[1];
+
+      /* Update New autoreload value in case of X or Y acceleration*/
+      /* Basic acceleration X_Offset and Y_Offset are divide by 40 to fir with ARR range */
+      NewARR_X = TIM_ARR - ABS(X_Offset/3);
+      NewARR_Y = TIM_ARR - ABS(Y_Offset/3);
+
+      /* Calculation of Max acceleration detected on X or Y axis */
+      Temp_X = ABS(X_Offset/3);
+      Temp_Y = ABS(Y_Offset/3);
+      MaxAcceleration = MAX_AB(Temp_X, Temp_Y);
+
+      if(MaxAcceleration != 0)
+      {
+    	  /* Reset CNT to a lowest value (equal to min CCRx of all Channels) */
+    	  __HAL_TIM_SET_COUNTER(&htim4,(TIM_ARR-MaxAcceleration)/2);
+
+    	  if (X_Offset > ThreadholdAcceleroHigh)
+    	  {
+    		  /* Sets the TIM4 Capture Compare for Channel3 Register value */
+    		  /* Equal to NewARR_X/2 to have duty cycle equal to 50% */
+    		  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, NewARR_X/2);
+
+    		  /* Time base configuration */
+    		  __HAL_TIM_SET_AUTORELOAD(&htim4, NewARR_X);
+
+    		  /* Enable TIM4 Capture Compare Channel3 */
+    		  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+    	  }
+    		  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+    		  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
+    		  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+
+
+
+      }
+
+
+
+
+
 }
 
 /**
